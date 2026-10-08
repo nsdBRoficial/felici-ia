@@ -2,23 +2,36 @@
 
 import React from "react";
 import Image from "next/image";
-import { User, Flame, Settings, LogIn, Award, BookOpen, ShieldCheck } from "lucide-react";
+import { Flame, Settings, BookOpen, ShieldCheck } from "lucide-react";
 import type { UserProfile } from "@/types/database";
 
+/**
+ * Propriedades recebidas pela tela Perfil.
+ */
 interface ProfileViewProps {
+  /** Perfil do aprendiz com dados de ofensiva e configurações */
   userProfile: UserProfile;
+  /** Callback para abrir o modal de redefinição de meta e escala semanal */
   onOpenOnboarding: () => void;
 }
 
+/**
+ * Componente ProfileView (Aba do Perfil do Aprendiz).
+ * 
+ * Centraliza as preferências, dados do programa, contador de ofensiva (streak),
+ * integração de autenticação com Supabase Auth (Google OAuth) e lembretes pedagógicos
+ * sobre o compromisso com o Senac e a empresa parceira.
+ */
 export function ProfileView({ userProfile, onOpenOnboarding }: ProfileViewProps) {
   return (
     <div className="space-y-5 px-4 pt-4 pb-8">
+      {/* Título da Aba */}
       <div>
         <h1 className="text-xl font-bold text-white">Meu Perfil</h1>
         <p className="text-xs text-slate-400">Informações e jornada de aprendizagem</p>
       </div>
 
-      {/* Card de Usuário */}
+      {/* Card Principal do Usuário: Avatar, Nome e Ofensiva */}
       <div className="rounded-3xl border border-slate-700/80 bg-slate-800/90 p-5 shadow-xl flex items-center gap-4">
         <div className="relative h-16 w-16 overflow-hidden rounded-2xl border-2 border-emerald-400/50 bg-slate-900 shadow-md">
           <Image
@@ -39,10 +52,10 @@ export function ProfileView({ userProfile, onOpenOnboarding }: ProfileViewProps)
         </div>
       </div>
 
-      {/* Botão de Configuração de Metas */}
+      {/* Botão para Configurar / Editar Meta e Escala Semanal */}
       <button
         onClick={onOpenOnboarding}
-        className="flex w-full items-center justify-between rounded-2xl border border-slate-700 bg-slate-800/70 p-4 text-left transition hover:border-emerald-500/50 hover:bg-slate-800"
+        className="flex w-full items-center justify-between rounded-2xl border border-slate-700 bg-slate-800/70 p-4 text-left transition hover:border-emerald-500/50 hover:bg-slate-800 active:scale-98"
       >
         <div className="flex items-center gap-3">
           <div className="rounded-xl bg-emerald-500/10 p-2.5 text-emerald-400">
@@ -58,7 +71,7 @@ export function ProfileView({ userProfile, onOpenOnboarding }: ProfileViewProps)
         <span className="text-xs font-bold text-emerald-400">Editar</span>
       </button>
 
-      {/* Autenticação Google OAuth (Épico 3.1) */}
+      {/* Seção de Autenticação na Nuvem (Épico 3.1: Supabase + Google OAuth) */}
       <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 space-y-3">
         <div className="flex items-center gap-2 text-slate-300">
           <ShieldCheck className="h-4 w-4 text-emerald-400" />
@@ -69,10 +82,11 @@ export function ProfileView({ userProfile, onOpenOnboarding }: ProfileViewProps)
         </p>
         <button
           onClick={() => {
-            alert("Fluxo de login com Google via Supabase Auth configurado! Adicione as chaves no .env.local para login real.");
+            alert("Fluxo de login com Google via Supabase Auth configurado! Basta adicionar as chaves no .env.local para login em produção.");
           }}
-          className="flex w-full items-center justify-center gap-2.5 rounded-xl border border-slate-700 bg-slate-800 py-2.5 text-xs font-semibold text-white hover:bg-slate-700 transition"
+          className="flex w-full items-center justify-center gap-2.5 rounded-xl border border-slate-700 bg-slate-800 py-2.5 text-xs font-semibold text-white hover:bg-slate-700 transition active:scale-98"
         >
+          {/* Ícone oficial Google em SVG */}
           <svg className="h-4 w-4" viewBox="0 0 24 24">
             <path
               fill="#4285F4"
@@ -95,14 +109,14 @@ export function ProfileView({ userProfile, onOpenOnboarding }: ProfileViewProps)
         </button>
       </div>
 
-      {/* Diretrizes Pedagógicas */}
+      {/* Diretrizes Pedagógicas e Institucionais do Senac */}
       <div className="rounded-2xl border border-indigo-500/20 bg-indigo-950/20 p-4 space-y-2">
         <div className="flex items-center gap-2 text-indigo-400">
           <BookOpen className="h-4 w-4" />
           <h3 className="text-xs font-bold">Compromisso do Aprendiz</h3>
         </div>
         <p className="text-[11px] text-slate-300 leading-relaxed">
-          Tanto a formação no Senac quanto a atuação na empresa compõem sua carga horária oficial. A frequência regular garante seu aprendizado, desenvolvimento de carreira e seu rendimento integral!
+          Tanto a formação no Senac quanto a atuação na empresa compõem sua jornada legal. A assiduidade garante seu aprendizado prático e o recebimento integral de sua remuneração mensal!
         </p>
       </div>
     </div>

@@ -1,44 +1,70 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import confetti from "canvas-confetti";
-import { GraduationCap, Briefcase, CheckCircle2, Sparkles, AlertCircle } from "lucide-react";
+import { GraduationCap, Briefcase, CheckCircle2, Sparkles } from "lucide-react";
 import type { CheckinType, UserProfile, DailyLog } from "@/types/database";
 
+/**
+ * Propriedades do componente CheckinCards.
+ */
 interface CheckinCardsProps {
+  /** Perfil atualizado do usuário com metas e dados de assiduidade */
   userProfile: UserProfile;
+  /** Lista de logs diários já registrados pelo aprendiz */
   dailyLogs: DailyLog[];
+  /** Callback executado após a validação e sucesso de um novo check-in */
   onCheckinSuccess: (type: CheckinType, valor: number) => void;
 }
 
+/**
+ * Componente CheckinCards (Gamificação e Lógica Core Down-Top).
+ * 
+ * Permite que o jovem aprendiz registre seu comparecimento diário:
+ * 1. "Fui ao Senac" (Formação teórica)
+ * 2. "Fui ao Trabalho" (Prática na empresa parceira)
+ * 
+ * Executa o cálculo Down-Top (Meta / Dias Úteis do Mês), dispara o efeito
+ * visual de confete e assegura o bloqueio contra registros duplicados no mesmo dia.
+ */
 export function CheckinCards({
   userProfile,
   dailyLogs,
   onCheckinSuccess,
 }: CheckinCardsProps) {
+  // Mensagem de feedback temporária após ação do usuário
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
+  // Data atual no formato YYYY-MM-DD calculada após a montagem do componente (evita erros de SSR)
   const [todayStr, setTodayStr] = useState<string>("");
 
-  React.useEffect(() => {
+  useEffect(() => {
+    // Sincroniza a data civil local após o carregamento no navegador
     setTodayStr(new Date().toISOString().split("T")[0]);
   }, []);
 
-  // Verifica se já fez checkin hoje
+  // Verifica se o check-in do Senac já foi realizado na data atual
   const checkedInSenacToday = Boolean(
     todayStr && dailyLogs.some((log) => log.data === todayStr && log.tipo_checkin === "senac")
   );
+
+  // Verifica se o check-in da Empresa já foi realizado na data atual
   const checkedInTrabalhoToday = Boolean(
     todayStr && dailyLogs.some((log) => log.data === todayStr && log.tipo_checkin === "trabalho")
   );
 
-  // Lógica Down-Top: Meta / (dias Senac + Empresa no mês ~ 22 dias médios)
+  // Lógica Down-Top:
+  // Calcula o total de dias de atividade por semana e projeta a média mensal (~4.4 semanas)
   const totalDaysPerWeek =
     (userProfile.dias_senac.length || 2) + (userProfile.dias_trabalho.length || 3);
-  const totalDaysInMonth = Math.max(1, totalDaysPerWeek * 4.4); // Aproximação de 4.4 semanas
+  const totalDaysInMonth = Math.max(1, totalDaysPerWeek * 4.4);
+  // Valor individual desbloqueado a cada presença confirmada
   const valorPorDia = Number(
     (userProfile.meta_mensal / totalDaysInMonth).toFixed(2)
   );
 
+  /**
+   * Dispara a animação festiva de confetes na tela.
+   */
   const triggerConfetti = () => {
     confetti({
       particleCount: 80,
@@ -48,20 +74,25 @@ export function CheckinCards({
     });
   };
 
+  /**
+   * Processa a tentativa de check-in com validação de duplicidade.
+   */
   const handleCheckin = (type: CheckinType) => {
     const isAlreadyChecked =
       type === "senac" ? checkedInSenacToday : checkedInTrabalhoToday;
 
+    // Regra de Bloqueio de Duplicidade: Não permite registro repetido no mesmo dia
     if (isAlreadyChecked) {
       setFeedbackMessage(
         `Você já registrou sua presença de ${
           type === "senac" ? "Senac" : "Trabalho"
-        } hoje! O bloqueio de duplicidade mantém sua integridade diária.`
+        } hoje! O bloqueio de duplicidade garante a integridade da sua rotina.`
       );
       setTimeout(() => setFeedbackMessage(null), 4000);
       return;
     }
 
+    // Dispara a celebração gamificada e atualiza o estado global
     triggerConfetti();
     onCheckinSuccess(type, valorPorDia);
     setFeedbackMessage(
@@ -74,6 +105,7 @@ export function CheckinCards({
 
   return (
     <div className="space-y-4">
+      {/* Título da seção e badge de taxa diária calculada */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-sm font-semibold tracking-wide text-slate-200">
@@ -88,6 +120,7 @@ export function CheckinCards({
         </span>
       </div>
 
+      {/* Banner de feedback comemorativo ou informativo */}
       {feedbackMessage && (
         <div className="flex items-start gap-2 rounded-xl border border-emerald-500/40 bg-emerald-950/50 p-3 text-xs text-emerald-200 animate-in fade-in slide-in-from-top duration-300">
           <Sparkles className="h-4 w-4 shrink-0 text-amber-400 mt-0.5" />
@@ -95,8 +128,9 @@ export function CheckinCards({
         </div>
       )}
 
+      {/* Grade com os 2 cards de missão diária */}
       <div className="grid grid-cols-2 gap-3">
-        {/* Card Senac */}
+        {/* Card de Registro do Senac */}
         <button
           onClick={() => handleCheckin("senac")}
           disabled={checkedInSenacToday}
@@ -134,7 +168,7 @@ export function CheckinCards({
           </div>
         </button>
 
-        {/* Card Trabalho */}
+        {/* Card de Registro da Empresa Parceira */}
         <button
           onClick={() => handleCheckin("trabalho")}
           disabled={checkedInTrabalhoToday}

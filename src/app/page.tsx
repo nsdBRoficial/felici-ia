@@ -2,15 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import {
-  Flame,
-  TrendingUp,
-  Sparkles,
-  Calendar,
-  Clock,
-  ChevronRight,
-  ShieldAlert,
-} from "lucide-react";
+import { Flame, Sparkles, ChevronRight } from "lucide-react";
 import { BottomNavigation } from "@/components/navigation/BottomNavigation";
 import { FeliciiaFab } from "@/components/chatbot/FeliciiaFab";
 import { FeliciiaModal } from "@/components/chatbot/FeliciiaModal";
@@ -20,6 +12,9 @@ import { WalletView } from "@/components/wallet/WalletView";
 import { ProfileView } from "@/components/profile/ProfileView";
 import type { UserProfile, DailyLog, CheckinType } from "@/types/database";
 
+/**
+ * Perfil padrão inicial utilizado em modo demonstrativo ou primeiro acesso do usuário.
+ */
 const DEFAULT_PROFILE: UserProfile = {
   id: "user-local-1",
   nome: "Jovem Aprendiz",
@@ -32,6 +27,9 @@ const DEFAULT_PROFILE: UserProfile = {
   updated_at: "2026-10-01T00:00:00.000Z",
 };
 
+/**
+ * Logs diários iniciais para exibição de histórico pré-populado na demonstração.
+ */
 const INITIAL_LOGS: DailyLog[] = [
   {
     id: "log-1",
@@ -51,17 +49,33 @@ const INITIAL_LOGS: DailyLog[] = [
   },
 ];
 
+/**
+ * Página Principal da aplicação FELICI-IÁ.
+ * 
+ * Integra o fluxo mobile-first completo:
+ * - Alternância entre abas (Início, Carteira e Perfil)
+ * - Persistência híbrida no LocalStorage do navegador
+ * - Visualização do Saldo Desbloqueado com a lógica Down-Top
+ * - Check-in gamificado diário com proteção contra duplicidade
+ * - FAB e Modal do Chatbot inteligente da FELICI-IÁ
+ */
 export default function HomePage() {
+  // Aba ativa na navegação inferior ('home' | 'wallet' | 'profile')
   const [activeTab, setActiveTab] = useState<"home" | "wallet" | "profile">("home");
+  // Perfil financeiro e de assiduidade do usuário
   const [userProfile, setUserProfile] = useState<UserProfile>(DEFAULT_PROFILE);
+  // Lista de check-ins registrados
   const [dailyLogs, setDailyLogs] = useState<DailyLog[]>(INITIAL_LOGS);
+  // Controle de visibilidade do modal do chatbot
   const [isChatOpen, setIsChatOpen] = useState(false);
+  // Controle de visibilidade do modal de onboarding / edição de metas
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
 
-  // Carrega e sincroniza com LocalStorage para persistência no navegador
+  /**
+   * Efeito de inicialização: recupera dados persistidos do LocalStorage para manter
+   * os testes do usuário salvos mesmo após atualizar a página no navegador.
+   */
   useEffect(() => {
-    setMounted(true);
     try {
       const savedProfile = localStorage.getItem("feliciia_user_profile");
       if (savedProfile) {
@@ -72,10 +86,13 @@ export default function HomePage() {
         setDailyLogs(JSON.parse(savedLogs));
       }
     } catch {
-      // Fallback para os estados iniciais
+      // Ignora falhas em ambientes restritos
     }
   }, []);
 
+  /**
+   * Atualiza e persiste o perfil do usuário localmente.
+   */
   const saveProfile = (updated: Partial<UserProfile>) => {
     const newProfile = { ...userProfile, ...updated };
     setUserProfile(newProfile);
@@ -84,6 +101,10 @@ export default function HomePage() {
     } catch {}
   };
 
+  /**
+   * Registra um novo check-in diário com sucesso (Senac ou Trabalho):
+   * incrementa o saldo acumulado, avança a ofensiva e salva o registro histórico.
+   */
   const handleCheckinSuccess = (type: CheckinType, valor: number) => {
     const todayStr = new Date().toISOString().split("T")[0];
     const newLog: DailyLog = {
@@ -110,6 +131,7 @@ export default function HomePage() {
     } catch {}
   };
 
+  // Cálculo da porcentagem da meta mensal atingida até o momento
   const percentualMeta = Math.min(
     100,
     Math.round((userProfile.saldo_atual / Math.max(1, userProfile.meta_mensal)) * 100)
@@ -117,9 +139,12 @@ export default function HomePage() {
 
   return (
     <main className="flex-1 flex flex-col">
+      {/* ------------------------------------------------------------- */}
+      {/* ABA 1: TELA INICIAL (Home)                                     */}
+      {/* ------------------------------------------------------------- */}
       {activeTab === "home" && (
         <div className="space-y-5 px-4 pt-4 pb-6">
-          {/* Header Superior */}
+          {/* Cabeçalho Superior com Avatar, Saudação e Ofensiva */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="relative h-11 w-11 overflow-hidden rounded-2xl border border-emerald-400/40 bg-slate-800 shadow-md">
@@ -138,14 +163,14 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Badge de Ofensiva */}
+            {/* Contador de Ofensiva (Streak Gamificado) */}
             <div className="flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-gradient-to-r from-amber-500/10 to-orange-500/10 px-3 py-1 text-xs font-bold text-amber-400 shadow-sm">
               <Flame className="h-4 w-4 fill-amber-400 animate-pulse" />
               <span>{userProfile.ofensiva} dias</span>
             </div>
           </div>
 
-          {/* Hero Card: Saldo Atual Desbloqueado (Lógica Down-Top) */}
+          {/* Hero Card: Saldo Atual Desbloqueado com a Lógica Down-Top */}
           <div className="relative overflow-hidden rounded-3xl border border-emerald-500/30 bg-gradient-to-br from-slate-900/90 via-slate-800/90 to-emerald-950/40 p-5 shadow-2xl glass-card">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold text-emerald-300 flex items-center gap-1">
@@ -166,7 +191,7 @@ export default function HomePage() {
               </h2>
             </div>
 
-            {/* Barra de Progresso da Meta */}
+            {/* Barra de Progresso em direção à Meta Mensal */}
             <div className="mt-4 space-y-1.5">
               <div className="flex justify-between text-xs">
                 <span className="text-slate-400 font-medium">Meta: R$ {userProfile.meta_mensal.toFixed(2)}</span>
@@ -181,14 +206,14 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Missões Diárias e Check-in com Bloqueio de Duplicidade */}
+          {/* Cards de Missão Diária (Check-in no Senac e no Trabalho) */}
           <CheckinCards
             userProfile={userProfile}
             dailyLogs={dailyLogs}
             onCheckinSuccess={handleCheckinSuccess}
           />
 
-          {/* Card Dica Rápida da FELICI-IÁ */}
+          {/* Pílula / Card de Dica Diária da FELICI-IÁ */}
           <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4 space-y-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -211,10 +236,16 @@ export default function HomePage() {
         </div>
       )}
 
+      {/* ------------------------------------------------------------- */}
+      {/* ABA 2: CARTEIRA E EXTRATO (Wallet)                            */}
+      {/* ------------------------------------------------------------- */}
       {activeTab === "wallet" && (
         <WalletView userProfile={userProfile} dailyLogs={dailyLogs} />
       )}
 
+      {/* ------------------------------------------------------------- */}
+      {/* ABA 3: PERFIL DO APRENDIZ (Profile)                           */}
+      {/* ------------------------------------------------------------- */}
       {activeTab === "profile" && (
         <ProfileView
           userProfile={userProfile}
@@ -222,17 +253,17 @@ export default function HomePage() {
         />
       )}
 
-      {/* FAB Flutuante da FELICI-IÁ */}
+      {/* Botão Flutuante da FELICI-IÁ (Visível em qualquer aba) */}
       <FeliciiaFab onClick={() => setIsChatOpen(true)} isOpen={isChatOpen} />
 
-      {/* Modal do Chatbot da FELICI-IÁ */}
+      {/* Modal do Chatbot da IA */}
       <FeliciiaModal
         isOpen={isChatOpen}
         onClose={() => setIsChatOpen(false)}
         userProfile={userProfile}
       />
 
-      {/* Modal de Onboarding / Edição de Meta */}
+      {/* Modal de Configuração de Metas (Onboarding) */}
       <OnboardingModal
         isOpen={isOnboardingOpen}
         onClose={() => setIsOnboardingOpen(false)}
@@ -240,7 +271,7 @@ export default function HomePage() {
         onSave={saveProfile}
       />
 
-      {/* Bottom Navigation Fixa */}
+      {/* Barra de Navegação Inferior Fixa */}
       <BottomNavigation
         activeTab={activeTab}
         onTabChange={setActiveTab}

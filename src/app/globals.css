@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* ==========================================================================
+   Variáveis Base e Sistema de Cores (Tema Escuro FELICI-IÁ)
+   ========================================================================== */
 @layer base {
   :root {
     --background: #0f172a;
@@ -13,6 +16,7 @@
   }
 }
 
+/* Fundo da aplicação com gradiente radial profundo e tipografia do sistema */
 body {
   background: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #0f172a 50%, #090d16 100%);
   color: #f8fafc;
@@ -21,7 +25,9 @@ body {
   overflow-x: hidden;
 }
 
-/* Glassmorphism helpers */
+/* ==========================================================================
+   Classes Utilitárias de Glassmorphism (Efeito Vidro Fosco)
+   ========================================================================== */
 .glass-panel {
   background: rgba(30, 41, 59, 0.7);
   backdrop-filter: blur(16px);
@@ -37,6 +43,7 @@ body {
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
 }
 
+/* Sombras com brilho colorido (Glow) */
 .glow-emerald {
   box-shadow: 0 0 25px -5px rgba(16, 185, 129, 0.4);
 }
@@ -45,7 +52,11 @@ body {
   box-shadow: 0 0 25px -5px rgba(139, 92, 246, 0.4);
 }
 
-/* Floating animation */
+/* ==========================================================================
+   Animações de Micro-interação
+   ========================================================================== */
+
+/* Animação suave de flutuação */
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
   50% { transform: translateY(-6px); }
@@ -55,7 +66,7 @@ body {
   animation: float 3s ease-in-out infinite;
 }
 
-/* Pulse glow */
+/* Animação pulsante de brilho para o botão da FELICI-IÁ */
 @keyframes pulse-glow {
   0%, 100% { opacity: 0.6; transform: scale(1); }
   50% { opacity: 1; transform: scale(1.05); }

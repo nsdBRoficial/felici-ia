@@ -2,6 +2,13 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import type { Database } from "@/types/database";
 
+/**
+ * Cria o cliente do Supabase para uso em Server Components, Server Actions e Route Handlers no Next.js.
+ * 
+ * Lê e persiste os tokens de sessão através dos cookies HTTP da requisição.
+ * 
+ * @returns Instância assíncrona tipada do cliente Supabase para o Servidor.
+ */
 export async function createClient() {
   const cookieStore = await cookies();
 
@@ -22,7 +29,7 @@ export async function createClient() {
               cookieStore.set(name, value, options)
             );
           } catch {
-            // Chamadas em Server Components podem ignorar se forem somente leitura
+            // Server Components somente-leitura ignoram erros ao tentar setar cookies
           }
         },
       },

@@ -1,30 +1,47 @@
 "use client";
 
 import React from "react";
-import { Wallet, TrendingUp, Calendar, ArrowUpRight, GraduationCap, Briefcase } from "lucide-react";
+import { TrendingUp, GraduationCap, Briefcase } from "lucide-react";
 import type { UserProfile, DailyLog } from "@/types/database";
 
+/**
+ * Propriedades recebidas pela tela Carteira.
+ */
 interface WalletViewProps {
+  /** Perfil do usuário contendo o saldo atual acumulado e meta mensal */
   userProfile: UserProfile;
+  /** Lista histórica de todos os check-ins registrados */
   dailyLogs: DailyLog[];
 }
 
+/**
+ * Componente WalletView (Aba da Carteira e Extrato).
+ * 
+ * Exibe a visão analítica dos ganhos do aprendiz:
+ * - Saldo total acumulado no mês corrente
+ * - Percentual de atingimento da meta mensal com barra de progresso visual
+ * - Separação detalhada de receitas geradas no Senac vs. Empresa parceira
+ * - Histórico cronológico dos últimos check-ins com valor monetário de cada presença
+ */
 export function WalletView({ userProfile, dailyLogs }: WalletViewProps) {
   const meta = userProfile.meta_mensal || 880;
   const saldo = userProfile.saldo_atual || 0;
+  // Calcula o percentual da meta atingida (limitado entre 0 e 100%)
   const percentualMeta = Math.min(100, Math.round((saldo / Math.max(1, meta)) * 100));
 
-  // Ganhos separados
+  // Ganhos agregados exclusivamente nas aulas teóricas do Senac
   const ganhoSenac = dailyLogs
     .filter((l) => l.tipo_checkin === "senac")
     .reduce((acc, curr) => acc + curr.valor_adicionado, 0);
 
+  // Ganhos agregados nas atividades práticas da Empresa
   const ganhoTrabalho = dailyLogs
     .filter((l) => l.tipo_checkin === "trabalho")
     .reduce((acc, curr) => acc + curr.valor_adicionado, 0);
 
   return (
     <div className="space-y-5 px-4 pt-4 pb-8">
+      {/* Título da Aba */}
       <div>
         <h1 className="text-xl font-bold text-white">Minha Carteira</h1>
         <p className="text-xs text-slate-400">
@@ -32,7 +49,7 @@ export function WalletView({ userProfile, dailyLogs }: WalletViewProps) {
         </p>
       </div>
 
-      {/* Saldo Principal Card */}
+      {/* Card Principal: Saldo Acumulado e Barra de Progresso */}
       <div className="rounded-3xl border border-slate-700/80 bg-gradient-to-br from-slate-800/90 to-slate-900/90 p-5 shadow-xl space-y-4">
         <div className="flex items-center justify-between">
           <span className="text-xs font-medium text-slate-400">Saldo Atual Desbloqueado</span>
@@ -50,7 +67,7 @@ export function WalletView({ userProfile, dailyLogs }: WalletViewProps) {
           </p>
         </div>
 
-        {/* Progress bar */}
+        {/* Barra de Progresso da Meta com Gradiente */}
         <div className="space-y-1.5">
           <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-700/60">
             <div
@@ -65,8 +82,9 @@ export function WalletView({ userProfile, dailyLogs }: WalletViewProps) {
         </div>
       </div>
 
-      {/* Detalhamento Senac vs Empresa */}
+      {/* Grade de Comparação: Ganhos no Senac vs. Ganhos na Empresa */}
       <div className="grid grid-cols-2 gap-3">
+        {/* Painel Senac */}
         <div className="rounded-2xl border border-indigo-500/20 bg-indigo-950/20 p-4">
           <div className="flex items-center gap-2 text-indigo-400">
             <GraduationCap className="h-4 w-4" />
@@ -76,10 +94,11 @@ export function WalletView({ userProfile, dailyLogs }: WalletViewProps) {
             R$ {ganhoSenac.toFixed(2)}
           </p>
           <p className="text-[10px] text-slate-400">
-            {dailyLogs.filter((l) => l.tipo_checkin === "senac").length} presenças
+            {dailyLogs.filter((l) => l.tipo_checkin === "senac").length} presenças registradas
           </p>
         </div>
 
+        {/* Painel Empresa */}
         <div className="rounded-2xl border border-amber-500/20 bg-amber-950/20 p-4">
           <div className="flex items-center gap-2 text-amber-400">
             <Briefcase className="h-4 w-4" />
@@ -89,12 +108,12 @@ export function WalletView({ userProfile, dailyLogs }: WalletViewProps) {
             R$ {ganhoTrabalho.toFixed(2)}
           </p>
           <p className="text-[10px] text-slate-400">
-            {dailyLogs.filter((l) => l.tipo_checkin === "trabalho").length} presenças
+            {dailyLogs.filter((l) => l.tipo_checkin === "trabalho").length} presenças registradas
           </p>
         </div>
       </div>
 
-      {/* Histórico Recente */}
+      {/* Extrato Cronológico de Check-ins */}
       <div className="space-y-3">
         <h3 className="text-sm font-semibold text-slate-200">Histórico de Desbloqueios</h3>
         {dailyLogs.length === 0 ? (

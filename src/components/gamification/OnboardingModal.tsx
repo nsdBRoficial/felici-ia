@@ -1,16 +1,26 @@
 "use client";
 
 import React, { useState } from "react";
-import { Target, Calendar, Check, X, Sparkles } from "lucide-react";
+import { Target, X, Sparkles } from "lucide-react";
 import type { UserProfile } from "@/types/database";
 
+/**
+ * Propriedades recebidas pelo OnboardingModal.
+ */
 interface OnboardingModalProps {
+  /** Se o modal de onboarding/ajuste de meta está aberto */
   isOpen: boolean;
+  /** Função para fechar o modal */
   onClose: () => void;
+  /** Dados atuais do perfil do usuário */
   userProfile: UserProfile;
+  /** Callback para salvar as alterações */
   onSave: (updated: Partial<UserProfile>) => void;
 }
 
+/**
+ * Lista dos dias úteis da semana disponíveis para marcação de rotina.
+ */
 const WEEKDAYS = [
   { id: 1, name: "Seg" },
   { id: 2, name: "Ter" },
@@ -20,12 +30,24 @@ const WEEKDAYS = [
   { id: 6, name: "Sáb" },
 ];
 
+/**
+ * Modal de Onboarding e Ajuste de Metas (Lógica Core Down-Top).
+ * 
+ * Permite ao jovem aprendiz personalizar:
+ * 1. Nome ou apelido
+ * 2. Meta financeira mensal (valor total da bolsa ou salário pretendido)
+ * 3. Dias da semana em que frequenta as aulas teóricas no Senac
+ * 4. Dias da semana em que atua presencialmente na empresa parceira
+ * 
+ * Exibe em tempo real o cálculo do ganho unitário desbloqueável por dia útil.
+ */
 export function OnboardingModal({
   isOpen,
   onClose,
   userProfile,
   onSave,
 }: OnboardingModalProps) {
+  // Estados locais para edição dos parâmetros
   const [metaMensal, setMetaMensal] = useState<number>(userProfile.meta_mensal || 880);
   const [nome, setNome] = useState<string>(userProfile.nome || "Aprendiz");
   const [diasSenac, setDiasSenac] = useState<number[]>(userProfile.dias_senac || [1, 2]);
@@ -35,6 +57,10 @@ export function OnboardingModal({
 
   if (!isOpen) return null;
 
+  /**
+   * Alterna a seleção de um dia da semana entre Senac e Trabalho,
+   * garantindo que o mesmo dia não seja atribuído a ambos simultaneamente.
+   */
   const toggleDay = (type: "senac" | "trabalho", dayId: number) => {
     if (type === "senac") {
       if (diasSenac.includes(dayId)) {
@@ -53,10 +79,14 @@ export function OnboardingModal({
     }
   };
 
+  // Cálculo de projeção Down-Top em tempo real
   const totalAtividadesSemana = diasSenac.length + diasTrabalho.length;
   const diasMes = Math.max(1, totalAtividadesSemana * 4.4);
   const valorDiarioCalculado = Number((metaMensal / diasMes).toFixed(2));
 
+  /**
+   * Salva os parâmetros atualizados e fecha o modal.
+   */
   const handleSave = () => {
     onSave({
       nome,
@@ -70,6 +100,7 @@ export function OnboardingModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
       <div className="w-full max-w-sm rounded-3xl border border-slate-700 bg-slate-900 p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-200">
+        {/* Cabeçalho do Modal */}
         <div className="flex items-center justify-between border-b border-slate-800 pb-3">
           <div className="flex items-center gap-2">
             <div className="rounded-lg bg-emerald-500/10 p-2 text-emerald-400">
@@ -82,13 +113,14 @@ export function OnboardingModal({
           </div>
           <button
             onClick={onClose}
+            aria-label="Fechar janela"
             className="rounded-full p-1 text-slate-400 hover:bg-slate-800 hover:text-white"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
 
-        {/* Nome */}
+        {/* Campo de Nome / Apelido */}
         <div className="space-y-1.5">
           <label className="text-xs font-semibold text-slate-300">Seu Nome / Apelido</label>
           <input
@@ -99,7 +131,7 @@ export function OnboardingModal({
           />
         </div>
 
-        {/* Meta Mensal */}
+        {/* Campo de Meta Mensal */}
         <div className="space-y-1.5">
           <label className="text-xs font-semibold text-slate-300">
             Meta Financeira Mensal (Bolsa / Salário)
@@ -116,7 +148,7 @@ export function OnboardingModal({
           </div>
         </div>
 
-        {/* Dias de Senac */}
+        {/* Seleção dos Dias de Senac */}
         <div className="space-y-1.5">
           <label className="text-xs font-semibold text-indigo-300">
             Dias de Aula no Senac (Teoria)
@@ -142,7 +174,7 @@ export function OnboardingModal({
           </div>
         </div>
 
-        {/* Dias de Empresa */}
+        {/* Seleção dos Dias de Empresa */}
         <div className="space-y-1.5">
           <label className="text-xs font-semibold text-amber-300">
             Dias na Empresa Parceira (Prática)
@@ -168,7 +200,7 @@ export function OnboardingModal({
           </div>
         </div>
 
-        {/* Resumo da Conversão Down-Top */}
+        {/* Painel de Pré-visualização da Conversão Down-Top */}
         <div className="rounded-2xl border border-emerald-500/30 bg-emerald-950/40 p-3.5 space-y-1">
           <div className="flex items-center gap-1.5 text-emerald-300 text-xs font-bold">
             <Sparkles className="h-3.5 w-3.5" />
@@ -183,6 +215,7 @@ export function OnboardingModal({
           </p>
         </div>
 
+        {/* Botão de Confirmação e Salvamento */}
         <button
           onClick={handleSave}
           className="w-full rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-500/20 hover:from-emerald-600 hover:to-teal-600 active:scale-98 transition"
